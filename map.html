@@ -55,7 +55,8 @@
         });
         showExportButton.onAdd = function (map) {
             this._div = L.DomUtil.create('div');
-            this._div.innerHTML = showExport + showBasemap;
+            // Change the order of buttons here
+            this._div.innerHTML = showBasemap + showExport;
             return this._div;
         };
         showExportButton.addTo(map);
