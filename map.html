@@ -7,9 +7,6 @@
     <title>Ini Peta Interaktif</title>
     <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css"
         integrity="sha256-p4NxAoJBhIIN+hmNHrzRCf9tD/miZyoHS5obTRR9BMY=" crossorigin="" />
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.3/css/all.min.css"
-        integrity="sha384-MCw98/SFnGE8fJT3BhfT/9Hckj1swWxHgx9nv0TApB4Zh42+7G4q6q9Wpi6H++kD"
-        crossorigin="" />
     <style>
         html,
         body,
@@ -19,77 +16,72 @@
             margin: 0;
         }
 
-        .leaflet-control-custom {
-            background: rgb(255, 255, 255);
-            border: 1px solid #ccc;
-            border-radius: 4px;
-            padding: 6px 8px;
-            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.65);
+        #gantiBasemapButton {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background-color: transparent;
+            border: none;
+            cursor: pointer;
+            outline: none;
+        }
+
+        #gantiBasemapButton img {
+            width: 30px; /* Sesuaikan ukuran gambar button layer */
+            height: auto;
         }
     </style>
 </head>
 
 <body>
     <div id="map"></div>
+    <button id="gantiBasemapButton" title="Ganti Basemap">
+        <img src="path/to/button-layer-image.png" alt="Ganti Basemap">
+    </button>
     <script src="https://code.jquery.com/jquery-3.6.1.min.js"></script>
     <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
         integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
     <script>
+        // yogyakarta
         var map = L.map('map').setView([-7.797068, 110.370529], 13);
 
-        var basemaps = {
-            'OpenStreetMap': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 18
-            }),
-            'OpenTopoMap': L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-                maxZoom: 18
-            }),
-            'Esri Satellite': L.tileLayer(
-                'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-                {
-                    maxZoom: 18
-                }
-            )
-        };
+        // basemap
+        var basemap = L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            maxZoom: 18
+        }).addTo(map);
 
-        basemaps['OpenStreetMap'].addTo(map);
-
-        var currentBasemap = 'OpenStreetMap';
-
-        var showExport = '<button onclick="loadlayer()" title="Refresh map" class="leaflet-control-custom"><i class="fas fa-sync-alt"></i></button>';
-        var showBasemap = '<button onclick="changeBasemap()" title="Change basemap" class="leaflet-control-custom"><i class="fas fa-map"></i></button>';
+        // Export Button
+        var showExport = '<button onclick="loadlayer()" title="Refresh map" class="">Reload</button>';
 
         var showExportButton = new L.Control({
             position: "topright"
         });
-
         showExportButton.onAdd = function (map) {
-            this._div = L.DomUtil.create('div', 'leaflet-control-custom');
-            this._div.innerHTML = showExport + showBasemap;
+            this._div = L.DomUtil.create('div');
+            this._div.innerHTML = showExport
             return this._div;
         };
-
         showExportButton.addTo(map);
 
-        function changeBasemap() {
-            basemaps[currentBasemap].remove();
-            if (currentBasemap === 'OpenStreetMap') {
-                currentBasemap = 'OpenTopoMap';
-            } else if (currentBasemap === 'OpenTopoMap') {
-                currentBasemap = 'Esri Satellite';
+        // Ganti Basemap Button
+        document.getElementById('gantiBasemapButton').addEventListener('click', function () {
+            // Ganti basemap sesuai kebutuhan, contoh: OpenStreetMap dan Google Satellite
+            if (basemap._url === 'https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png') {
+                basemap.setUrl('https://www.google.com/maps/vt?lyrs=s&x={x}&y={y}&z={z}');
             } else {
-                currentBasemap = 'OpenStreetMap';
+                basemap.setUrl('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png');
             }
-            basemaps[currentBasemap].addTo(map);
-        }
+        });
 
         var point = L.geoJson(null);
 
         function loadlayer() {
+            // Clear existing data
             point.clearLayers();
 
-            $.getJSON("https://script.google.com/macros/s/AKfycbyLPI1mWjgTP_Pv1ZVWA7xJkFMWcnt7czjMUNsvdY9mJTlySOVXTG9wRIDepJ9rV_6E/exec", function (
-                data) {
+            // Fetch new data
+            $.getJSON("https://script.google.com/macros/s/AKfycbyLPI1mWjgTP_Pv1ZVWA7xJkFMWcnt7czjMUNsvdY9mJTlySOVXTG9wRIDepJ9rV_6E/exec", function (data) {
+                // Add new data to the map
                 point.addData(data);
                 map.addLayer(point);
                 map.fitBounds(point.getBounds());
