@@ -18,6 +18,14 @@
             width: 100%;
             margin: 0;
         }
+
+        .leaflet-control-custom {
+            background: rgb(255, 255, 255);
+            border: 1px solid #ccc;
+            border-radius: 4px;
+            padding: 6px 8px;
+            box-shadow: 0 1px 5px rgba(0, 0, 0, 0.65);
+        }
     </style>
 </head>
 
@@ -37,7 +45,8 @@
                 maxZoom: 18
             }),
             'Esri Satellite': L.tileLayer(
-                'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}', {
+                'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
+                {
                     maxZoom: 18
                 }
             )
@@ -47,17 +56,19 @@
 
         var currentBasemap = 'OpenStreetMap';
 
-        var showExport = '<button onclick="loadlayer()" title="Refresh map" class="">Reload</button>';
-        var showBasemap = '<button onclick="changeBasemap()" title="Change basemap" class="">Basemap</button>';
+        var showExport = '<button onclick="loadlayer()" title="Refresh map" class="leaflet-control-custom">Reload</button>';
+        var showBasemap = '<button onclick="changeBasemap()" title="Change basemap" class="leaflet-control-custom" class="layer-group"></button>';
 
         var showExportButton = new L.Control({
             position: "topright"
         });
+
         showExportButton.onAdd = function (map) {
-            this._div = L.DomUtil.create('div');
+            this._div = L.DomUtil.create('div', 'leaflet-control-custom');
             this._div.innerHTML = showExport + showBasemap;
             return this._div;
         };
+
         showExportButton.addTo(map);
 
         function changeBasemap() {
@@ -71,21 +82,17 @@
             }
             basemaps[currentBasemap].addTo(map);
         }
-
         var point = L.geoJson(null);
 
         function loadlayer() {
-            // Clear existing data
             point.clearLayers();
 
-            // Fetch new data
-            $.getJSON("https://script.google.com/macros/s/AKfycbyLPI1mWjgTP_Pv1ZVWA7xJkFMWcnt7czjMUNsvdY9mJTlySOVXTG9wRIDepJ9rV_6E/exec",
-                function (data) {
-                    // Add new data to the map
-                    point.addData(data);
-                    map.addLayer(point);
-                    map.fitBounds(point.getBounds());
-                });
+            $.getJSON("https://script.google.com/macros/s/AKfycbyLPI1mWjgTP_Pv1ZVWA7xJkFMWcnt7czjMUNsvdY9mJTlySOVXTG9wRIDepJ9rV_6E/exec", function (
+                data) {
+                point.addData(data);
+                map.addLayer(point);
+                map.fitBounds(point.getBounds());
+            });
         }
 
         loadlayer();
