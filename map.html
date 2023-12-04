@@ -18,77 +18,109 @@
             width: 100%;
             margin: 0;
         }
+        /* Gaya Tombol Reload */
+      .reload-button {
+        background-color: #3081d0;
+        color: #fff;
+        border: none;
+        border-radius: 50%;
+        padding: 10px;
+        font-size: 20px;
+        cursor: pointer;
+        transition: background-color 0.3s ease;
+      }
+
+      .reload-button:hover {
+        background-color: #3081d0;
+      }
+
+
     </style>
 </head>
 
-<body>
+  <body>
+    <header>
+      <h1>ATM Nearby</h1>
+    </header>
     <div id="map"></div>
+
     <script src="https://code.jquery.com/jquery-3.6.1.min.js"></script>
-    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"
-        integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" integrity="sha256-20nQCchB9co0qIjJZRGuk2/Z9VM+kNiyxNV1lvTlZBo=" crossorigin=""></script>
+    <script src="https://unpkg.com/leaflet.awesome-markers/dist/leaflet.awesome-markers.js"></script>
+
     <script>
-        var map = L.map('map').setView([-7.797068, 110.370529], 13);
+      // yogyakarta
+      var map = L.map("map").setView([-7.765593857777918, 110.37887576611304], 13);
 
-        var basemaps = {
-            'OpenStreetMap': L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
-                maxZoom: 18
-            }),
-            'OpenTopoMap': L.tileLayer('https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png', {
-                maxZoom: 18
-            }),
-            'Esri Satellite': L.tileLayer(
-                'https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',
-                {
-                    maxZoom: 18
-                }
-            )
-        };
+      // Basemap OpenStreetMap
+      var basemapOSM = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+        maxZoom: 18,
+      }).addTo(map);
 
-        basemaps['OpenStreetMap'].addTo(map);
+      // Basemap OpenTopoMap (Contoh basemap lainnya)
+      var basemapOpenTopoMap = L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
+        attribution: "Open Topo Map",
+      });
 
-        var currentBasemap = 'OpenStreetMap';
+      // Control Layers
+      var baseMaps = {
+        OpenStreetMap: basemapOSM,
+        OpenTopoMap: basemapOpenTopoMap,
+      };
 
-        var showExport = '<button onclick="loadlayer()" title="Refresh map" class="leaflet-control-custom">Reload</button>';
-        var showBasemap = '<button onclick="changeBasemap()" title="Change basemap" class="leaflet-control-custom" class="layer-group"></button>';
+      L.control.layers(baseMaps).addTo(map);
 
-        var showExportButton = new L.Control({
-            position: "topright"
-        });
-
-        showExportButton.onAdd = function (map) {
-            this._div = L.DomUtil.create('div', 'leaflet-control-custom');
-            this._div.innerHTML = showExport + showBasemap;
-            return this._div;
-        };
-
-        showExportButton.addTo(map);
-
-        function changeBasemap() {
-            basemaps[currentBasemap].remove();
-            if (currentBasemap === 'OpenStreetMap') {
-                currentBasemap = 'OpenTopoMap';
-            } else if (currentBasemap === 'OpenTopoMap') {
-                currentBasemap = 'Esri Satellite';
-            } else {
-                currentBasemap = 'OpenStreetMap';
-            }
-            basemaps[currentBasemap].addTo(map);
+      // Fungsi untuk mengganti basemap
+      function changeBasemap(basemap) {
+        if (basemap === "osm") {
+          map.removeLayer(basemapOpenTopoMap);
+          basemapOSM.addTo(map);
+        } else if (basemap === "stamen") {
+          map.removeLayer(basemapOSM);
+          basemapOpenTopoMap.addTo(map);
         }
-        var point = L.geoJson(null);
+        // Tambahkan opsi basemap lainnya jika diperlukan
+      }
 
-        function loadlayer() {
-            point.clearLayers();
+      // Export Button
+      var showExport = '<button onclick="loadlayer()" title="Refresh map" class="reload-button"><i class="fas fa-sync-alt"></i> </button>';
+      var showExportButton = new L.Control({ position: "topright" });
+      showExportButton.onAdd = function (map) {
+        this._div = L.DomUtil.create("div");
+        this._div.innerHTML = showExport;
+        return this._div;
+      };
+      showExportButton.addTo(map);
 
-            $.getJSON("https://script.google.com/macros/s/AKfycbwMthMwAmJ6bE6Iblhbki1MD8tbat_iT0WHA2dX_N7j8PuhF09MMbBFXtUnyJ2ynrv8/exec", function (
-                data) {
-                point.addData(data);
-                map.addLayer(point);
-                map.fitBounds(point.getBounds());
+      function loadlayer() {
+        var point = L.geoJson(null, {
+          pointToLayer: function (feature, latlng) {
+            return L.marker(latlng, {
+              icon: L.divIcon({
+                className: "atm",
+                html: '<i class="fas fa-landmark" ></i>',
+                iconSize: [24, 24], // Sesuaikan ukuran ikon
+                iconAnchor: [12, 24], // Sesuaikan posisi ikon
+              }),
             });
-        }
+          },
+          onEachFeature: function (feature, layer) {
+            var popupContent = "<h4>" + feature.properties.nama + "</h4>" + "<p>" + feature.properties.alamat + "</p>";
+            layer.on({
+              click: function (e) {
+                point.bindPopup(popupContent);
+              },
+            });
+          },
+        });
+        $.getJSON("https://script.google.com/macros/s/AKfycbwMthMwAmJ6bE6Iblhbki1MD8tbat_iT0WHA2dX_N7j8PuhF09MMbBFXtUnyJ2ynrv8/exec", function (data) {
+          point.addData(data);
+          map.addLayer(point);
+          map.fitBounds(point.getBounds());
+        });
+      }
 
-        loadlayer();
+      loadlayer();
     </script>
-</body>
-
+  </body>
 </html>
