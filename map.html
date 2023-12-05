@@ -128,51 +128,14 @@
     };
     controlButtonDiv.addTo(map);
 
-    var existingMarkers = {};
-
     function loadlayer() {
+      // Clear existing layers
+      map.removeLayer(pointLayer);
+      
       // Load updated data
       $.getJSON("https://script.google.com/macros/s/AKfycbwMthMwAmJ6bE6Iblhbki1MD8tbat_iT0WHA2dX_N7j8PuhF09MMbBFXtUnyJ2ynrv8/exec", function (data) {
-        // Create a dictionary to keep track of existing markers
-        var newMarkers = {};
-
-        data.features.forEach(function (feature) {
-          var markerId = feature.properties.id; // assuming there is an 'id' property
-          var existingMarker = existingMarkers[markerId];
-
-          if (existingMarker) {
-            // If the marker already exists, update its position
-            existingMarker.setLatLng([feature.geometry.coordinates[1], feature.geometry.coordinates[0]]);
-          } else {
-            // If the marker does not exist, create a new marker
-            var marker = L.marker([feature.geometry.coordinates[1], feature.geometry.coordinates[0]], {
-              icon: L.divIcon({
-                className: "spbu",
-                html: '<i class="fas fa-gas-pump"></i>',
-                iconSize: [24, 24],
-                iconAnchor: [12, 24],
-              }),
-            });
-
-            // Add marker to the map
-            marker.addTo(map);
-
-            // Store the marker in the dictionary
-            newMarkers[markerId] = marker;
-          }
-        });
-
-        // Remove markers that are no longer in the updated data
-        Object.keys(existingMarkers).forEach(function (markerId) {
-          if (!newMarkers[markerId]) {
-            map.removeLayer(existingMarkers[markerId]);
-          }
-        });
-
-        // Update the existing markers dictionary
-        existingMarkers = newMarkers;
-
-        // Fit the map bounds to the updated data
+        pointLayer.addData(data);
+        map.addLayer(pointLayer);
         map.fitBounds(pointLayer.getBounds());
       });
     }
