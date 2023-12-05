@@ -76,26 +76,6 @@
 
   <script>
     var map = L.map("map").setView([-7.765593857777918, 110.37887576611304], 13);
-    var pointLayer = L.geoJson(null, {
-      pointToLayer: function (feature, latlng) {
-        return L.marker(latlng, {
-          icon: L.divIcon({
-            className: "spbu",
-            html: '<i class="fas fa-gas-pump"></i>',
-            iconSize: [24, 24],
-            iconAnchor: [12, 24],
-          }),
-        });
-      },
-      onEachFeature: function (feature, layer) {
-        var popupContent = "<h4>" + feature.properties.nama + "</h4>" + "<p>" + feature.properties.alamat + "</p>";
-        layer.on({
-          click: function (e) {
-            pointLayer.bindPopup(popupContent);
-          },
-        });
-      },
-    });
 
     var basemapOSM = L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
       maxZoom: 18,
@@ -103,7 +83,7 @@
 
     var basemapESRISatellite = L.tileLayer("https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}", {
       maxZoom: 18,
-    });
+    })
 
     var basemapOpenTopoMap = L.tileLayer("https://{s}.tile.opentopomap.org/{z}/{x}/{y}.png", {
       attribution: "Open Topo Map",
@@ -129,14 +109,30 @@
     controlButtonDiv.addTo(map);
 
     function loadlayer() {
-      // Clear existing layers
-      map.removeLayer(pointLayer);
-      
-      // Load updated data
+      var point = L.geoJson(null, {
+        pointToLayer: function (feature, latlng) {
+          return L.marker(latlng, {
+            icon: L.divIcon({
+              className: "spbu",
+              html: '<i class="fas fa-gas-pump"></i>',
+              iconSize: [24, 24],
+              iconAnchor: [12, 24],
+            }),
+          });
+        },
+        onEachFeature: function (feature, layer) {
+          var popupContent = "<h4>" + feature.properties.nama + "</h4>" + "<p>" + feature.properties.alamat + "</p>";
+          layer.on({
+            click: function (e) {
+              point.bindPopup(popupContent);
+            },
+          });
+        },
+      });
       $.getJSON("https://script.google.com/macros/s/AKfycbwMthMwAmJ6bE6Iblhbki1MD8tbat_iT0WHA2dX_N7j8PuhF09MMbBFXtUnyJ2ynrv8/exec", function (data) {
-        pointLayer.addData(data);
-        map.addLayer(pointLayer);
-        map.fitBounds(pointLayer.getBounds());
+        point.addData(data);
+        map.addLayer(point);
+        map.fitBounds(point.getBounds());
       });
     }
 
